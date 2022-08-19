@@ -8,7 +8,7 @@ namespace TiVo
 {
     public class FileGenerate
     {
-        Random rnd = new Random();
+        Random rnd = new Random(1);
         readonly int _lineCount;
         string[] _words;
 

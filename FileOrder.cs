@@ -13,10 +13,11 @@ namespace TiVo
             _fn = fn;
         }
 
-        public void Order(int partSize)
+        public string Order(int partSize)
         {
-            var fileParts = SplitFile(partSize).Select(s => new FilePart(s)).ToList();
-            using var writer = new StreamWriter(Path.GetFileNameWithoutExtension(_fn) + ".rez" + Path.GetExtension(_fn));
+            var fileParts = SplitFile(partSize).Select(s => new FilePart(s)).OrderBy(f => f.currentLine).ToList();
+            var fn = Path.GetFileNameWithoutExtension(_fn) + ".rez" + Path.GetExtension(_fn);
+            using var writer = new StreamWriter(fn);
             while (fileParts.Any())
             {
                 var part = fileParts[0];
@@ -24,8 +25,9 @@ namespace TiVo
                 if (!part.Next())
                     fileParts.Remove(part);
                 ReOrder(fileParts);
+                //fileParts = fileParts.OrderBy(f => f.currentLine).ToList();
             }
-
+            return fn;
         }
 
         private void ReOrder(List<FilePart> fileParts)
@@ -37,17 +39,15 @@ namespace TiVo
             int n = 0;
             for (n = 1; n < fileParts.Count; n++)
             {
-                if (fileParts[0].currentLine.CompareTo(fileParts[n].currentLine) > 0)
+                if (fileParts[0].currentLine.CompareTo(fileParts[n].currentLine) < 0)
                 {
                     break;
                 }
             }
-            if (n >= fileParts.Count)
-                n = fileParts.Count - 1;
 
             var tmp = fileParts[0];
-            fileParts[0] = fileParts[n];
-            fileParts[n] = tmp;
+            fileParts.RemoveAt(0);
+            fileParts.Insert(n - 1, tmp);
         }
 
         private string[] SplitFile(int partSize)
@@ -77,6 +77,24 @@ namespace TiVo
             }
 
             return files.ToArray();
+        }
+
+        public static bool Check(string fn)
+        {
+            using var reader = new StreamReader(fn);
+            Line previous = null;
+            while (!reader.EndOfStream)
+            {
+                Line line = null;
+                var s = reader.ReadLine();
+                if (!string.IsNullOrEmpty(s))
+                    line = new Line(s);
+                if (previous != null && line != null)
+                    if (previous.CompareTo(line) > 0)
+                        return false;
+                previous = line;
+            }
+            return true;
         }
     }
 }

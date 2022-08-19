@@ -29,5 +29,10 @@ namespace TiVo
             currentLine = null;
             return false;
         }
+
+        public override string ToString()
+        {
+            return currentLine?.ToString();
+        }
     }
 }
