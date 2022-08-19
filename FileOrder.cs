@@ -1,4 +1,8 @@
-﻿namespace TiVo
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace TiVo
 {
     public class FileOrder
     {

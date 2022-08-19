@@ -1,4 +1,6 @@
-﻿namespace TiVo
+﻿using System;
+
+namespace TiVo
 {
     public class Line : IComparable<Line>
     {

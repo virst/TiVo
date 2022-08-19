@@ -1,4 +1,7 @@
-﻿namespace TiVo
+﻿using System;
+using System.IO;
+
+namespace TiVo
 {
     public class FilePart
     {
