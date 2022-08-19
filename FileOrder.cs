@@ -16,7 +16,7 @@ namespace TiVo
         public void Order(int partSize)
         {
             var fileParts = SplitFile(partSize).Select(s => new FilePart(s)).ToList();
-            using var writer = new StreamWriter("result.txt");
+            using var writer = new StreamWriter(Path.GetFileNameWithoutExtension(_fn) + ".rez" + Path.GetExtension(_fn));
             while (fileParts.Any())
             {
                 var part = fileParts[0];
