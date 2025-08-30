@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using TiVo;
 
-int size = 1_000_000;
-int split = 10;
-if (args.Length > 0)
-    size = Convert.ToInt32(args[0]);
-if (args.Length > 1)
-    split = Convert.ToInt32(args[1]);
+string fn, fno;
 
-Console.WriteLine("Start!");
+if (args.Length == 2)
+{
+    fn = args[0];
+    fno = args[1];
+}
+else
+{
+    fn = FileGenerate.MakeFile(45_000_000);
+    fno = "out.txt";
+}
+
+using var writer = new StreamWriter(fno);
+using var reader = new StreamReader(fn);
 var sw = Stopwatch.StartNew();
-
-FileGenerate fg = new(size);
-var nf = fg.SaveFile();
-Console.WriteLine($"FileGenerate Elapsed: {sw.ElapsedMilliseconds} ms.");
-FileOrder fo = new(nf);
-var orderedFile = fo.Order(size / split);
-
-sw.Stop();
-Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds} ms.");
-Console.WriteLine($"Check={FileOrder.Check(orderedFile)}.");
+FileOrder.Order(500_000, writer, reader);
+Console.WriteLine("Elapsed Minutes: {0}", sw.Elapsed.TotalMinutes);

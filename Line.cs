@@ -17,12 +17,13 @@ namespace TiVo
             Number = int.Parse(s.AsSpan(0, _dot));
         }
 
-        public int CompareTo(Line other)
+        public int CompareTo(Line? other)
         {
-            int result = Word.SequenceCompareTo(other.Word);
+            if (other == null) return 1;
+            int result = Number.CompareTo(other.Number);
             if (result != 0)
                 return result;
-            return Number.CompareTo(other.Number);
+            return Word.SequenceCompareTo(other.Word);
         }
 
         public override string ToString()

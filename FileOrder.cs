@@ -4,61 +4,52 @@ using System.Linq;
 
 namespace TiVo
 {
-    public class FileOrder
+    public static class FileOrder
     {
-        private readonly string _fn;
-
-        public FileOrder(string fn)
+        public static void Order(int partSize, TextWriter writer, StreamReader reader)
         {
-            _fn = fn;
-        }
+            var fileParts = SplitFile(partSize, reader);
 
-        public string Order(int partSize)
-        {
-            var fileParts = SplitFile(partSize).Select(s => new FilePart(s)).OrderBy(f => f.currentLine).ToList();
-            var fn = Path.GetFileNameWithoutExtension(_fn) + ".rez" + Path.GetExtension(_fn);
-            using var writer = new StreamWriter(fn);
-            while (fileParts.Any())
+            var comparer = Comparer<Line>.Create((a, b) => a.CompareTo(b));
+            var queue = new PriorityQueue<FilePart, Line>(comparer);
+
+            foreach (var fn in fileParts)
             {
-                var part = fileParts[0];
-                writer.WriteLine(part.currentLine);
-                if (!part.Next())
-                    fileParts.Remove(part);
-                ReOrder(fileParts);
-                //fileParts = fileParts.OrderBy(f => f.currentLine).ToList();
+                var fp = new FilePart(fn);
+                if (!fp.Next()) continue;
+                var line = fp.CurrentLine;
+                if (line == null) continue;
+                queue.Enqueue(fp, line);
             }
-            return fn;
-        }
 
-        private void ReOrder(List<FilePart> fileParts)
-        {
-            if (fileParts.Count < 2)
-                return;
-            if (fileParts[0].currentLine.CompareTo(fileParts[1].currentLine) <= 0)
-                return;
-            int n = 0;
-            for (n = 1; n < fileParts.Count; n++)
+            while (queue.Count > 0)
             {
-                if (fileParts[0].currentLine.CompareTo(fileParts[n].currentLine) < 0)
+                queue.TryDequeue(out var fp, out var currentLine);
+                if (fp == null || currentLine == null) continue;
+                writer.WriteLine(currentLine);
+                if (!fp.Next())
                 {
-                    break;
+                    fp.Dispose();
+                    continue;
                 }
+                var line = fp.CurrentLine;
+                if (line == null)
+                {
+                    fp.Dispose();
+                    continue;
+                }
+                queue.Enqueue(fp, line);
             }
-
-            var tmp = fileParts[0];
-            fileParts.RemoveAt(0);
-            fileParts.Insert(n - 1, tmp);
         }
 
-        private string[] SplitFile(int partSize)
+        private static List<string> SplitFile(int partSize, StreamReader reader)
         {
-            List<string> files = new();
+            List<string> files = [];
             int n = 0;
 
-            using var reader = new StreamReader(_fn);
             while (!reader.EndOfStream)
             {
-                List<Line> lines = new();
+                List<Line> lines = [];
                 for (int i = 0; i < partSize; i++)
                 {
                     if (reader.EndOfStream)
@@ -76,25 +67,7 @@ namespace TiVo
                     writer.WriteLine(line);
             }
 
-            return files.ToArray();
-        }
-
-        public static bool Check(string fn)
-        {
-            using var reader = new StreamReader(fn);
-            Line previous = null;
-            while (!reader.EndOfStream)
-            {
-                Line line = null;
-                var s = reader.ReadLine();
-                if (!string.IsNullOrEmpty(s))
-                    line = new Line(s);
-                if (previous != null && line != null)
-                    if (previous.CompareTo(line) > 0)
-                        return false;
-                previous = line;
-            }
-            return true;
+            return files;
         }
     }
 }

@@ -3,13 +3,15 @@ using System.IO;
 
 namespace TiVo
 {
-    public class FilePart
+    public class FilePart : IDisposable
     {
-        StreamReader reader;
-        public Line currentLine { get; private set; }
+        private readonly StreamReader reader;
+        public Line? CurrentLine { get; private set; }
+        private readonly string _fn;
 
         public FilePart(string fn)
         {
+            _fn = fn;
             reader = new StreamReader(fn);
             if (!Next())
                 throw new Exception("broken file.");
@@ -22,17 +24,23 @@ namespace TiVo
                 var s = reader.ReadLine();
                 if (!string.IsNullOrEmpty(s))
                 {
-                    currentLine = new Line(s);
+                    CurrentLine = new Line(s);
                     return true;
                 }
             }
-            currentLine = null;
+            CurrentLine = null;
             return false;
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
-            return currentLine?.ToString();
+            return CurrentLine?.ToString();
+        }
+
+        public void Dispose()
+        {
+            reader.Dispose();
+            File.Delete(_fn);
         }
     }
 }

@@ -6,35 +6,30 @@ using System.IO;
 
 namespace TiVo
 {
-    public class FileGenerate
+    public static class FileGenerate
     {
-        Random rnd = new Random(1);
-        readonly int _lineCount;
-        string[] _words;
+        private readonly static Random rnd = new();
 
-        public FileGenerate(int lineCount)
+        public static void MakeFile(int lineCount, TextWriter stream)
         {
-            _lineCount = lineCount;
-
-            _words = Enumerable.Range(0, lineCount / 10)
-                .Select(i => new string(Enumerable.Range(0, rnd.Next(20, 200)).Select(t => (char)rnd.Next('A', 'Z')).ToArray())).ToArray();
+            for (int i = 0; i < lineCount; i++)
+            {
+                stream.WriteLine($"{GenerateNumber()}. {GenerateString()}");
+            }
         }
 
-        public string SaveFile()
+        public static string MakeFile(int lineCount)
         {
-            var fn = $"L{_lineCount}.txt";
-
+            var fn = $"L{lineCount}.txt";
             using var fstream = new StreamWriter(fn);
-            for (int i = 0; i < _lineCount; i++)
-            {
-                fstream.WriteLine($"{GenerateNumber()}. {GenerateString()}");
-            }
+
+            MakeFile(lineCount, fstream);
 
             return fn;
         }
 
-        private string GenerateString() => _words[rnd.Next(0, _words.Length)];
+        private static string GenerateString() => new([.. Enumerable.Range(0, rnd.Next(20, 101)).Select(t => (char)rnd.Next('A', 'Z'))]);
 
-        private int GenerateNumber() => rnd.Next(0, 10000);
+        private static int GenerateNumber() => rnd.Next(0, 10000);
     }
 }
